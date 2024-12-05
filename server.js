@@ -65,6 +65,35 @@ app.post("/api/test-token", (req, res) => {
     res.status(403).json({ message: "Invalid token", error: err.message });
   }
 });
+
+// Registration
+
+app.post("/api/register", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    console.log("Received data:", { name, email, password });
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    // Create new user
+    const newUser = new User({
+      name,
+      email,
+      password, // Password will be hashed automatically
+    });
+    await newUser.save();
+
+    res.status(201).json({ message: "User registered successfully" });
+  } catch (error) {
+    console.error("Error during registration:", error.message);
+    res.status(500).json({ error: "Server error during registration." });
+  }
+});
+
 // Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
