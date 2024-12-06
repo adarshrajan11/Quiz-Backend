@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "./src/models/user.js";
 import authenticate from "./src/middlewares/authMiddlewares.js";
+import checkRole from "./src/middlewares/checkRole.js";
 
 dotenv.config();
 
@@ -37,9 +38,11 @@ app.post("/api/login", async (req, res) => {
     }
 
     // Generate JWT
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
     res.status(200).json({ message: "Login successful", token });
   } catch (error) {
@@ -92,6 +95,14 @@ app.post("/api/register", async (req, res) => {
     console.error("Error during registration:", error.message);
     res.status(500).json({ error: "Server error during registration." });
   }
+});
+// role based login admin
+app.get("/api/admin", authenticate, checkRole("admin"), (req, res) => {
+  res.status(200).json({ message: "Welcome, Admin!" });
+});
+// role based login User
+app.get("/api/user", authenticate, checkRole("user"), (req, res) => {
+  res.status(200).json({ message: "Welcome, User!" });
 });
 
 // Server
